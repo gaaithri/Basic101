@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activity Voting Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #ffffff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
+      h1 {
+        text-align: center;
+        color: #333333;
+      }
+      .activity {
+        margin-bottom: 20px;
+      }
+      .activity-info {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+      }
+      .vote-buttons {
+        text-align: center;
+        margin: 10px 0;
+      }
+      .vote-buttons button {
+        padding: 10px 20px;
+        font-size: 1em;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .yes-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      .no-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+      .counter {
+        margin: 20px 0;
+        font-size: 1.1em;
+        color: #555555;
+      }
+      .bar-graph {
+        margin: 20px 0;
+        text-align: center;
+      }
+      .bar {
+        width: 80%;
+        height: 30px;
+        background-color: #f1f1f1;
+        position: relative;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .bar .yes-progress {
+        height: 100%;
+        background-color: #28a745;
+        text-align: right;
+        padding-right: 5px;
+        color: white;
+        line-height: 30px;
+      }
+      .bar .min-bar {
+        position: absolute;
+        height: 100%;
+        background-color: transparent;
+        opacity: 1;
+        border-right: 2px solid #ffc107;
+      }
+      .names {
+        display: flex;
+        justify-content: space-between;
+      }
+      .names div {
+        width: 48%;
+        background: #f1f1f1;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .names h3 {
+        margin-top: 0;
+        font-size: 1.1em;
+        color: #333333;
+      }
+      .names ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .names li {
+        padding: 5px 0;
+        border-bottom: 1px solid #ddd;
+      }
+      .names li:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Activity Voting</h1>
+
+      <div class="activity">
+        <p class="activity-info"><strong>Activity:</strong> Yoga Session</p>
+        <p class="activity-info"><strong>Location:</strong> Community Park</p>
+        <p class="activity-info"><strong>Time:</strong> 7:00 AM</p>
+        <p class="activity-info">
+          <strong>Quantity:</strong> 20 Mats Available
+        </p>
+      </div>
+
+      <div class="vote-buttons">
+        <button class="yes-btn" onclick="voteYes()">Yes</button>
+        <button class="no-btn" onclick="voteNo()">No</button>
+      </div>
+
+      <div class="counter">
+        <p>
+          <strong>Minimum Yes Votes Needed:</strong>
+          <span id="min-yes">10</span>
+        </p>
+        <p><strong>Maximum Yes Votes:</strong> <span id="max-yes">30</span></p>
+        <p>
+          <strong>Yes Votes Remaining:</strong>
+          <span id="yes-remaining">7</span>
+        </p>
+        <p>
+          <strong>People Yet to Vote:</strong> <span id="yet-to-vote">9</span>
+        </p>
+      </div>
+
+      <div class="bar-graph">
+        <div class="bar">
+          <div class="min-bar" id="min-bar" style="left: 33%"></div>
+          <div class="yes-progress" id="yes-progress" style="width: 30%">
+            30%
+          </div>
+        </div>
+      </div>
+
+      <div class="names">
+        <div>
+          <h3>Yes Votes</h3>
+          <ul id="yes-list">
+            <!-- List of Yes voters will be appended here -->
+          </ul>
+        </div>
+        <div>
+          <h3>Yet to Vote</h3>
+          <ul id="yet-to-vote-list">
+            <!-- List of people yet to vote will be appended here -->
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let yesVotes = 3;
+      let maxYesVotes = 30;
+      let noVotes = 0;
+      let yetToVote = 9;
+      const minYesVotes = 10;
+
+      // Example data: Names of people yet to vote
+      const yetToVoteNames = [
+        { name: "Alice Johnson", phone: "111-222-3333" },
+        { name: "Bob Smith", phone: "222-333-4444" },
+        { name: "Charlie Brown", phone: "333-444-5555" },
+        { name: "Diana Prince", phone: "444-555-6666" },
+        { name: "Ethan Hunt", phone: "555-666-7777" },
+        { name: "Fiona Gallagher", phone: "666-777-8888" },
+        { name: "George Weasley", phone: "777-888-9999" },
+        { name: "Hannah Baker", phone: "888-999-0000" },
+        { name: "Iris West", phone: "999-000-1111" },
+      ];
+
+      const yesList = document.getElementById("yes-list");
+      const yetToVoteList = document.getElementById("yet-to-vote-list");
+      const yesRemaining = document.getElementById("yes-remaining");
+      const yetToVoteDisplay = document.getElementById("yet-to-vote");
+      const yesProgress = document.getElementById("yes-progress");
+      const minBar = document.getElementById("min-bar");
+
+      function updateDisplay() {
+        const yesPercentage = Math.min((yesVotes / maxYesVotes) * 100, 100);
+        const minPercentage = (minYesVotes / maxYesVotes) * 100;
+
+        yesProgress.style.width = `${yesPercentage}%`;
+        yesProgress.textContent = `${Math.round(yesPercentage)}%`;
+
+        minBar.style.left = `${minPercentage}%`;
+
+        // Update bar color based on progress
+        if (yesVotes < minYesVotes / 2) {
+          yesProgress.style.backgroundColor = "#dc3545"; // Red
+        } else if (yesVotes < minYesVotes * 0.85) {
+          yesProgress.style.backgroundColor = "#ffc107"; // Yellow
+        } else if (yesVotes < minYesVotes) {
+          yesProgress.style.backgroundColor = "#90ee90"; // Light Green
+        } else {
+          const greenShade = Math.min(
+            255,
+            144 + (111 * (yesVotes - minYesVotes)) / (maxYesVotes - minYesVotes)
+          );
+          yesProgress.style.backgroundColor = `rgb(144, ${greenShade}, 144)`; // Gradient Green
+        }
+
+        yesRemaining.textContent = Math.max(minYesVotes - yesVotes, 0);
+        yetToVoteDisplay.textContent = yetToVote;
+        renderYetToVoteList();
+      }
+
+      function addToList(list, name, phone) {
+        const li = document.createElement("li");
+        li.textContent = `${name} (${phone})`;
+        list.appendChild(li);
+      }
+
+      function renderYetToVoteList() {
+        yetToVoteList.innerHTML = ""; // Clear the list
+        yetToVoteNames.forEach((person) => {
+          addToList(yetToVoteList, person.name, person.phone);
+        });
+      }
+
+      function voteYes() {
+        if (yesVotes < maxYesVotes && yetToVoteNames.length > 0) {
+          yesVotes++;
+          yetToVote--;
+
+          const person = yetToVoteNames.shift(); // Remove the first person from the list
+          addToList(yesList, person.name, person.phone);
+          updateDisplay();
+        }
+      }
+
+      function voteNo() {
+        if (yetToVoteNames.length > 0) {
+          noVotes++;
+          yetToVote--;
+
+          yetToVoteNames.shift(); // Remove the first person from the list
+          updateDisplay();
+        }
+      }
+
+      updateDisplay();
+    </script>
+  </body>
+</html>
